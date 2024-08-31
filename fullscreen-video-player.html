@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTF | Player</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <link href="https://vjs.zencdn.net/8.16.1/video-js.css" rel="stylesheet" />
+        <script src="https://vjs.zencdn.net/8.16.1/video.js"></script>
+<style>
+#my-video {
+    position: fixed; /* Make the container fixed to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index: 9999; /* Ensure the player is on top of other elements */
+}
+
+.video-js {
+    width: 100%;
+    height: 100%;
+    font-family: Segoe UI, sans-serif;
+}
+
+.video-js .vjs-time-tooltip {
+  font-family: Segoe UI, sans-serif;
+}
+
+.vjs-control-bar {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)) !important; 
+}
+        .vjs-custom-button {
+            font-size: 1.0em;
+                        cursor: pointer;
+            user-select: none;
+        }
+.video-js .vjs-play-progress{
+  border-radius: 999px;
+}
+.video-js .vjs-slider {
+  border-radius: 999px;
+}
+.video-js .vjs-load-progress {
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+</style>
+</head>
+<body>
+ <video
+    id="my-video"
+    class="video-js"
+    controls
+    preload="auto"
+    data-setup="{}"
+  >
+    <source src="https://storage.googleapis.com/wtfplayer/baps1e1.mp4" type="video/mp4" />
+    <p class="vjs-no-js">
+      To view this video please enable JavaScript, and consider upgrading to a
+      web browser that
+      <a href="https://videojs.com/html5-video-support/" target="_blank"
+        >supports HTML5 video</a>
+    </p>
+  </video>
+  <script>
+
+var player = videojs('my-video', {
+  autoplay: true
+});
+        // Custom button plugin
+        videojs.registerPlugin('customButtons', function() {
+            var player = this;
+
+            // Forward 10 seconds button
+            var forwardButton = player.controlBar.addChild('button', {
+                clickHandler: function() {
+                    var newTime = player.currentTime() + 10;
+                    if (newTime > player.duration()) {
+                        newTime = player.duration();
+                    }
+                    player.currentTime(newTime);
+                },
+                text: 'Forward 10 seconds',
+                title: 'Forward 10 seconds' 
+            });
+            forwardButton.el().innerHTML = `
+                <svg viewBox="0 0 64 64" width="12" height="12" class="vjs-custom-button">
+                 <path fill="currentColor" d="M51.668 19.544A22.958 22.958 0 0 0 38.811 9.76c-12.19-3.67-25.05 3.237-28.72 15.428-3.672 12.191 3.236 25.05 15.427 28.72 7.241 2.181 14.717.632 20.37-3.548a22.939 22.939 0 0 0 8.35-11.879 2.5 2.5 0 0 1 4.788 1.442A27.94 27.94 0 0 1 48.861 54.38c-6.867 5.078-15.97 6.97-24.785 4.316C9.241 54.23.836 38.583 5.303 23.747 9.77 8.912 25.418.507 40.253 4.974a27.935 27.935 0 0 1 14.534 10.27V8.595a2.5 2.5 0 0 1 5 0v15.949H43.838a2.5 2.5 0 0 1 0-5h7.83Z"></path>
+                            <path fill="currentColor" d="M25.536 39V28.904l-2.672 2.624v-2.912l2.752-2.736h2.56V39h-2.64ZM35.28 25.64c.703 0 1.354.144 1.951.432.597.288 1.11.715 1.536 1.28.438.555.779 1.243 1.024 2.064.245.81.368 1.744.368 2.8v.416c0 1.045-.123 1.979-.368 2.8-.245.81-.586 1.499-1.024 2.064a4.347 4.347 0 0 1-1.536 1.296 4.303 4.303 0 0 1-1.952.448 4.4 4.4 0 0 1-1.936-.432 4.614 4.614 0 0 1-1.536-1.28c-.437-.565-.778-1.259-1.024-2.08-.245-.821-.368-1.76-.368-2.816V32.2c0-1.045.123-1.973.368-2.784.245-.821.587-1.51 1.024-2.064.438-.565.95-.992 1.536-1.28a4.4 4.4 0 0 1 1.936-.432Zm0 2.128c-.705 0-1.222.325-1.553.976-.32.64-.48 1.632-.48 2.976v1.456c0 1.365.16 2.368.48 3.008.33.63.848.944 1.552.944.704 0 1.221-.315 1.552-.944.341-.64.512-1.643.512-3.008V31.72c0-1.344-.17-2.336-.512-2.976-.341-.65-.859-.976-1.552-.976Z"></path>
+                </svg>
+            `;
+
+            // Backward 10 seconds button
+            var backwardButton = player.controlBar.addChild('button', {
+                clickHandler: function() {
+                    var newTime = player.currentTime() - 10;
+                    if (newTime < 0) {
+                        newTime = 0;
+                    }
+                    player.currentTime(newTime);
+                },
+                text: 'Backward 10 seconds',
+                title: 'Backward 10 seconds'
+            });
+            backwardButton.el().innerHTML = `
+                <svg viewBox="0 0 64 64" width="12" height="12" class="vjs-custom-button">
+                   <path fill="currentColor" d="M12.332 19.544A22.958 22.958 0 0 1 25.189 9.76c12.191-3.67 25.05 3.237 28.72 15.428 3.672 12.191-3.236 25.05-15.427 28.72-7.24 2.181-14.717.632-20.37-3.548a22.94 22.94 0 0 1-8.35-11.879 2.5 2.5 0 1 0-4.788 1.442A27.94 27.94 0 0 0 15.139 54.38c6.867 5.078 15.97 6.97 24.785 4.316 14.835-4.467 23.24-20.114 18.773-34.95C54.23 8.912 38.583.507 23.747 4.974a27.935 27.935 0 0 0-14.534 10.27V8.595a2.5 2.5 0 1 0-5 0v15.949h15.949a2.5 2.5 0 0 0 0-5h-7.83Z"></path>
+                            <path fill="currentColor" d="M26.536 40V29.904l-2.672 2.624v-2.912l2.752-2.736h2.56V40h-2.64ZM36.279 26.64c.704 0 1.355.144 1.952.432.597.288 1.11.715 1.536 1.28.437.555.779 1.243 1.024 2.064.245.81.368 1.744.368 2.8v.416c0 1.045-.123 1.979-.368 2.8-.245.81-.587 1.499-1.024 2.064a4.348 4.348 0 0 1-1.536 1.296 4.303 4.303 0 0 1-1.952.448 4.399 4.399 0 0 1-1.936-.432 4.612 4.612 0 0 1-1.536-1.28c-.437-.565-.779-1.259-1.024-2.08-.245-.821-.368-1.76-.368-2.816V33.2c0-1.045.123-1.973.368-2.784.245-.821.587-1.51 1.024-2.064.437-.565.95-.992 1.536-1.28a4.399 4.399 0 0 1 1.936-.432Zm0 2.128c-.704 0-1.221.325-1.552.976-.32.64-.48 1.632-.48 2.976v1.456c0 1.365.16 2.368.48 3.008.33.63.848.944 1.552.944.704 0 1.221-.315 1.552-.944.341-.64.512-1.643.512-3.008V32.72c0-1.344-.17-2.336-.512-2.976-.341-.65-.859-.976-1.552-.976Z"></path>
+                </svg>
+            `;
+
+            player.controlBar.el().insertBefore(
+                backwardButton.el(),
+                player.controlBar.getChild('playToggle').el()
+            );
+            player.controlBar.el().insertBefore(
+                forwardButton.el(),
+                player.controlBar.getChild('playToggle').el().nextSibling
+            );
+        });
+
+        // Initialize Video.js player and activate the plugin
+        var player = videojs('my-video', {
+            controls: true,
+            autoplay: true,
+            preload: 'auto'
+        });
+
+        player.customButtons();
+    </script>
+</body>
+</html>
