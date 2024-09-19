@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTF | Player</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <link href="https://vjs.zencdn.net/8.16.1/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/8.16.1/video.js"></script>
+   <link href="player.css" rel="stylesheet" />
+<style>
+#my-video {
+    position: fixed; /* Make the container fixed to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index: 9999; /* Ensure the player is on top of other elements */
+}
+
+.video-js {
+    width: 100%;
+    height: 100%;
+    font-family: PFont, sans-serif;
+}
+.video-js .vjs-time-tooltip {
+    font-family: PFont, sans-serif;
+}
+.video-js .vjs-menu-item-text {
+    font-family: PFont, sans-serif;
+}
+.video-js .vjs-picture-in-picture-control{
+ display: none !important;
+}
+.vjs-control-bar {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)) !important; 
+}
+        .vjs-custom-button {
+            font-size: 15px;
+             cursor: pointer;
+            user-select: none;
+        }
+.video-js .vjs-play-progress{
+  border-radius: 999px;
+}
+.video-js .vjs-slider {
+  border-radius: 999px;
+}
+.video-js .vjs-load-progress {
+  border-radius: 999px;
+  overflow: hidden;
+}
+.video-js .vjs-volume-control .vjs-mouse-display {
+    border-radius: 999px;
+    font-family: PFont, sans-serif;
+}
+.video-js .vjs-control-bar button {
+  font-size: 10px;
+}
+.video-js .vjs-volume-level  {
+    border-radius: 999px;
+}
+.video-js .vjs-volume-tooltip{
+    font-family: PFont, sans-serif;
+}
+.video-js .vjs-progress-control {
+  position: absolute;
+  bottom: 0; 
+  width: 100%; 
+  left: 0;
+  margin-bottom: 25px;
+}
+.vjs-texttrack-settings{
+   display: none !important;
+}
+.video-js .vjs-remaining-time {
+  position: absolute;
+  right: 0;
+  font-size: 14px;
+  color: white;
+  top: -50px;
+}
+.vjs-text-track-display {
+    pointer-events: auto !important;
+}
+.video-js .vjs-control-bar {
+     display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.vjs-subs-caps-button:hover ~ .vjs-control-bar .vjs-progress-control,
+.vjs-audio-button:hover ~ .vjs-progress-control {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    transition: visibility 0s linear 0.3s, opacity 0.3s;
+}
+</style>
+</head>
+<body>
+ <video
+    id="my-video"
+    class="video-js"
+    controls
+    preload="auto"
+    data-setup="{}"
+      autoplay
+    muted
+    poster="https://occ-0-395-325.1.nflxso.net/dnm/api/v6/6AYY37jfdO6hpXcMjf9Yu5cnmO0/AAAABT3QqkAO-ERnJJ4NAbAfuLTlmFAikIXrcee8dLTNimtwuLuZXndr5B0ZbD8d3ZOJHUpIuoiXii2xdnv0iQUwriH-CNvk2wA3tt22.jpg"
+  >
+    <source src="https://www.dl.dropboxusercontent.com/scl/fi/9y8uj2ryf2qoo5wqc2zaz/video_only.mp4?rlkey=8u40k3qavrndtpa04y0n7pli1&raw=1" type="video/mp4"/>
+    <track kind="captions" src="https://www.dl.dropboxusercontent.com/scl/fi/sb386rb77kvgdbl8gyztt/stt.vtt?rlkey=lcvklbfgbzwvb0nvd9f4s5g6j&raw=1" srclang="vi" label="Phụ đề" default>
+      <audio id="1" src="https://www.dl.dropboxusercontent.com/scl/fi/2qbq15vwvdubdedxjggm5/audio_1.m4a?rlkey=gcv2bo5j15t67pzdcjxd1igqz&raw=1" type="audio/m4a" preload="auto"></audio>
+  <audio id="2" src="https://www.dl.dropboxusercontent.com/scl/fi/oxdsnhsv50u4hbcdutzqd/audio_2.m4a?rlkey=h9lc7nx74dbxm51csp75czfr5&raw=1" type="audio/m4a" preload="auto"></audio>
+    <p class="vjs-no-js">
+      To view this video please enable JavaScript, and consider upgrading to a
+      web browser that
+      <a href="https://videojs.com/html5-video-support/" target="_blank"
+        >supports HTML5 video</a>
+    </p>
+  </video>
+  <script>
+        // Custom button plugin
+        videojs.registerPlugin('customButtons', function() {
+            var player = this;
+
+            // Forward 10 seconds button
+            var forwardButton = player.controlBar.addChild('button', {
+                clickHandler: function() {
+                    var newTime = player.currentTime() + 10;
+                    if (newTime > player.duration()) {
+                        newTime = player.duration();
+                    }
+                    player.currentTime(newTime);
+                },
+                text: 'Forward 10 seconds',
+                title: 'Forward 10 seconds' 
+            });
+            forwardButton.el().innerHTML = `
+                <svg viewBox="0 0 64 64" width="12" height="12" class="vjs-custom-button">
+                 <path fill="currentColor" d="M51.668 19.544A22.958 22.958 0 0 0 38.811 9.76c-12.19-3.67-25.05 3.237-28.72 15.428-3.672 12.191 3.236 25.05 15.427 28.72 7.241 2.181 14.717.632 20.37-3.548a22.939 22.939 0 0 0 8.35-11.879 2.5 2.5 0 0 1 4.788 1.442A27.94 27.94 0 0 1 48.861 54.38c-6.867 5.078-15.97 6.97-24.785 4.316C9.241 54.23.836 38.583 5.303 23.747 9.77 8.912 25.418.507 40.253 4.974a27.935 27.935 0 0 1 14.534 10.27V8.595a2.5 2.5 0 0 1 5 0v15.949H43.838a2.5 2.5 0 0 1 0-5h7.83Z"></path>
+                            <path fill="currentColor" d="M25.536 39V28.904l-2.672 2.624v-2.912l2.752-2.736h2.56V39h-2.64ZM35.28 25.64c.703 0 1.354.144 1.951.432.597.288 1.11.715 1.536 1.28.438.555.779 1.243 1.024 2.064.245.81.368 1.744.368 2.8v.416c0 1.045-.123 1.979-.368 2.8-.245.81-.586 1.499-1.024 2.064a4.347 4.347 0 0 1-1.536 1.296 4.303 4.303 0 0 1-1.952.448 4.4 4.4 0 0 1-1.936-.432 4.614 4.614 0 0 1-1.536-1.28c-.437-.565-.778-1.259-1.024-2.08-.245-.821-.368-1.76-.368-2.816V32.2c0-1.045.123-1.973.368-2.784.245-.821.587-1.51 1.024-2.064.438-.565.95-.992 1.536-1.28a4.4 4.4 0 0 1 1.936-.432Zm0 2.128c-.705 0-1.222.325-1.553.976-.32.64-.48 1.632-.48 2.976v1.456c0 1.365.16 2.368.48 3.008.33.63.848.944 1.552.944.704 0 1.221-.315 1.552-.944.341-.64.512-1.643.512-3.008V31.72c0-1.344-.17-2.336-.512-2.976-.341-.65-.859-.976-1.552-.976Z"></path>
+                </svg>
+            `;
+
+            // Backward 10 seconds button
+            var backwardButton = player.controlBar.addChild('button', {
+                clickHandler: function() {
+                    var newTime = player.currentTime() - 10;
+                    if (newTime < 0) {
+                        newTime = 0;
+                    }
+                    player.currentTime(newTime);
+                },
+                text: 'Backward 10 seconds',
+                title: 'Backward 10 seconds'
+            });
+            backwardButton.el().innerHTML = `
+                <svg viewBox="0 0 64 64" width="12" height="12" class="vjs-custom-button">
+                   <path fill="currentColor" d="M12.332 19.544A22.958 22.958 0 0 1 25.189 9.76c12.191-3.67 25.05 3.237 28.72 15.428 3.672 12.191-3.236 25.05-15.427 28.72-7.24 2.181-14.717.632-20.37-3.548a22.94 22.94 0 0 1-8.35-11.879 2.5 2.5 0 1 0-4.788 1.442A27.94 27.94 0 0 0 15.139 54.38c6.867 5.078 15.97 6.97 24.785 4.316 14.835-4.467 23.24-20.114 18.773-34.95C54.23 8.912 38.583.507 23.747 4.974a27.935 27.935 0 0 0-14.534 10.27V8.595a2.5 2.5 0 1 0-5 0v15.949h15.949a2.5 2.5 0 0 0 0-5h-7.83Z"></path>
+                            <path fill="currentColor" d="M26.536 40V29.904l-2.672 2.624v-2.912l2.752-2.736h2.56V40h-2.64ZM36.279 26.64c.704 0 1.355.144 1.952.432.597.288 1.11.715 1.536 1.28.437.555.779 1.243 1.024 2.064.245.81.368 1.744.368 2.8v.416c0 1.045-.123 1.979-.368 2.8-.245.81-.587 1.499-1.024 2.064a4.348 4.348 0 0 1-1.536 1.296 4.303 4.303 0 0 1-1.952.448 4.399 4.399 0 0 1-1.936-.432 4.612 4.612 0 0 1-1.536-1.28c-.437-.565-.779-1.259-1.024-2.08-.245-.821-.368-1.76-.368-2.816V33.2c0-1.045.123-1.973.368-2.784.245-.821.587-1.51 1.024-2.064.437-.565.95-.992 1.536-1.28a4.399 4.399 0 0 1 1.936-.432Zm0 2.128c-.704 0-1.221.325-1.552.976-.32.64-.48 1.632-.48 2.976v1.456c0 1.365.16 2.368.48 3.008.33.63.848.944 1.552.944.704 0 1.221-.315 1.552-.944.341-.64.512-1.643.512-3.008V32.72c0-1.344-.17-2.336-.512-2.976-.341-.65-.859-.976-1.552-.976Z"></path>
+                </svg>
+            `;
+
+            player.controlBar.el().insertBefore(
+                backwardButton.el(),
+                player.controlBar.getChild('playToggle').el()
+            );
+            player.controlBar.el().insertBefore(
+                forwardButton.el(),
+                player.controlBar.getChild('playToggle').el().nextSibling
+            );
+        });
+var player = videojs('my-video', {
+    controls: true,
+    preload: 'auto'
+});
+player.customButtons();
+  var audioTrack1 = new videojs.AudioTrack({
+    id: '1',
+    kind: 'alternative',
+    label: 'Audio Track 1',
+    language: 'ja'
+  });
+
+  var audioTrack2 = new videojs.AudioTrack({
+    id: '2',
+    kind: 'alternative',
+    label: 'Audio Track 2',
+    language: 'vi'
+  });
+
+  player.audioTracks().addTrack(audioTrack1);
+  player.audioTracks().addTrack(audioTrack2);
+
+var audioElements = [
+    document.getElementById('1'),
+    document.getElementById('2')
+];
+var currentAudioTrack = 0;
+var isWaiting = false;
+var isAudioLoading = false;
+
+function autoPressPlayButton() {
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList') {
+        const playButton = player.el().querySelector('.vjs-big-play-button');
+        if (playButton && playButton.style.display !== 'none') {
+          playButton.click();
+          observer.disconnect();
+        }
+      }
+    });
+  });
+
+  observer.observe(player.el(), {
+    childList: true,
+    subtree: true
+  });
+}
+
+player.ready(function() {
+     audioElements.forEach(audio => audio.load());
+
+    function syncAudio() {
+        audioElements.forEach((audio, index) => {
+            if (index === currentAudioTrack) {
+                if (player.paused() || isWaiting || isAudioLoading) {
+                    audio.pause();
+                } else {
+                    audio.play().catch(e => console.error("Audio playback failed:", e));
+                }
+                audio.currentTime = player.currentTime();
+                audio.volume = player.volume();
+                audio.muted = player.muted();
+            } else {
+                audio.pause();
+            }
+        });
+  var subtitlesElement = player.el().querySelector('.vjs-subs-caps-button');
+        var audioButton = player.el().querySelector('.vjs-audio-button');
+        var progressControl = player.el().querySelector('.vjs-progress-control');
+
+        function hideProgressBar() {
+            progressControl.style.visibility = 'hidden';
+            progressControl.style.opacity = '0';
+        }
+
+        function showProgressBar() {
+            progressControl.style.visibility = 'visible';
+            progressControl.style.opacity = '1';
+        }
+
+        subtitlesElement.addEventListener('mouseenter', hideProgressBar);
+        subtitlesElement.addEventListener('mouseleave', showProgressBar);
+        audioButton.addEventListener('mouseenter', hideProgressBar);
+        audioButton.addEventListener('mouseleave', showProgressBar);
+    }
+
+    player.on('play', syncAudio);
+    player.on('pause', syncAudio);
+    player.on('timeupdate', syncAudio);
+    player.on('seeking', syncAudio);
+    player.on('volumechange', syncAudio);
+
+    // Handle video buffering
+    player.on('waiting', function() {
+        isWaiting = true;
+        audioElements[currentAudioTrack].pause();
+    });
+
+    player.on('canplay', function() {
+        isWaiting = false;
+        if (!player.paused() && !isAudioLoading) {
+            audioElements[currentAudioTrack].play().catch(e => console.error("Audio playback failed:", e));
+        }
+    });
+
+    // Handle audio track changes
+    player.audioTracks().addEventListener('change', function() {
+        var tracks = player.audioTracks();
+        for (var i = 0; i < tracks.length; i++) {
+            if (tracks[i].enabled) {
+                switchAudioTrack(parseInt(tracks[i].id) - 1);
+                break;
+            }
+        }
+    });
+
+    function switchAudioTrack(newTrack) {
+        if (newTrack !== currentAudioTrack) {
+            isAudioLoading = true;
+            player.addClass('vjs-waiting');
+
+            // Pause current audio
+            audioElements[currentAudioTrack].pause();
+
+            currentAudioTrack = newTrack;
+            var newAudio = audioElements[currentAudioTrack];
+
+            function audioReady() {
+                isAudioLoading = false;
+                player.removeClass('vjs-waiting'); 
+                syncAudio();
+                newAudio.removeEventListener('canplaythrough', audioReady);
+            }
+
+            // Check if the new audio is already loaded
+            if (newAudio.readyState >= 4) {
+                audioReady();
+            } else {
+                newAudio.addEventListener('canplaythrough', audioReady);
+                newAudio.load();  // Force reload to trigger event
+            }
+        }
+    }
+   autoPressPlayButton();
+
+    // Enable the first audio track by default
+    player.audioTracks()[0].enabled = true;
+
+    // Override the player's volume methods to control audio directly
+    var originalVolume = player.volume;
+    var originalMuted = player.muted;
+
+    player.volume = function(percentAsDecimal) {
+        if (percentAsDecimal !== undefined) {
+            audioElements[currentAudioTrack].volume = percentAsDecimal;
+            return originalVolume.call(this, percentAsDecimal);
+        }
+        return audioElements[currentAudioTrack].volume;
+    };
+
+    player.muted = function(muted) {
+        if (muted !== undefined) {
+            audioElements[currentAudioTrack].muted = muted;
+            return originalMuted.call(this, muted);
+        }
+        return audioElements[currentAudioTrack].muted;
+    };
+
+    player.volume(1);
+});
+    </script>
+</body>
+</html>
