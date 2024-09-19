@@ -224,46 +224,6 @@ function autoPressPlayButton() {
 }
 
 player.ready(function() {
-
-      player.muted = function(muted) {
-                if (muted !== undefined) {
-                    audioElements.forEach(audio => audio.muted = muted);
-                    return originalMuted.call(this, muted);
-                }
-                return audioElements[currentAudioTrack].muted;
-            };
-
-            // Add this new function to sync muted state
-            function syncMutedState() {
-                var isMuted = audioElements[currentAudioTrack].muted;
-                player.muted(isMuted);
-                // Force update of the mute toggle button
-                var muteToggle = player.controlBar.getChild('muteToggle');
-                if (muteToggle) {
-                    muteToggle.el().setAttribute('aria-checked', !isMuted);
-                    muteToggle.removeClass('vjs-muted');
-                    if (isMuted) {
-                        muteToggle.addClass('vjs-muted');
-                    }
-                }
-            }
-
-            syncMutedState();
-
-            audioElements.forEach(audio => {
-                audio.addEventListener('volumechange', syncMutedState);
-            });
-
-            player.volume = function(percentAsDecimal) {
-                if (percentAsDecimal !== undefined) {
-                    audioElements.forEach(audio => audio.volume = percentAsDecimal);
-                    var newValue = originalVolume.call(this, percentAsDecimal);
-                    syncMutedState(); 
-                    return newValue;
-                }
-                return audioElements[currentAudioTrack].volume;
-            };
-
      audioElements.forEach(audio => audio.load());
 
     function syncAudio() {
