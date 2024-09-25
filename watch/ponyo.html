@@ -11,6 +11,7 @@
     <link href="https://vjs.zencdn.net/8.16.1/video-js.css" rel="stylesheet" />
     <script src="https://vjs.zencdn.net/8.16.1/video.js"></script>
    <link href="player.css" rel="stylesheet" />
+    <script src="prerolls.js"></script>
 <style>
 #my-video {
     position: fixed; /* Make the container fixed to the viewport */
@@ -98,6 +99,26 @@
     opacity: 0 !important;
     transition: visibility 0s linear 0.3s, opacity 0.3s;
 }
+        .preroll-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 2147483647;
+            display: none;
+        }
+
+        .vjs-preroll .vjs-control-bar > *:not(.vjs-play-control) {
+            display: none !important;
+        }
+
+        .vjs-preroll .vjs-progress-control {
+            display: none !important;
+        }
 </style>
 </head>
 <body>
@@ -179,6 +200,7 @@ var player = videojs('my-video', {
     preload: 'auto'
 });
 player.customButtons();
+player.prerollManager();
   var audioTrack1 = new videojs.AudioTrack({
     id: '1',
     kind: 'alternative',
