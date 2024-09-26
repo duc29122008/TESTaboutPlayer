@@ -37,7 +37,7 @@
 
     PrerollManager.prototype.updatePrerollCounter = function() {
         var remainingTime = this.player.duration() - this.player.currentTime();
-        this.prerollCounter.textContent = `Preroll • ${this.currentPreroll + 1} of ${this.prerolls.length} • ${this.formatTime(remainingTime)}`;
+        this.prerollCounter.textContent = `Quảng cáo • ${this.currentPreroll + 1}/${this.prerolls.length} • ${this.formatTime(remainingTime)}`;
     };
 
     PrerollManager.prototype.playNextPreroll = function() {
