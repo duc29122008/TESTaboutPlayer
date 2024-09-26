@@ -144,7 +144,7 @@
     </p>
   </video>
   <script>
-    var player = videojs('my-video', {
+   var player = videojs('my-video', {
         controls: true,
         autoplay: false,
         preload: 'auto'
@@ -208,19 +208,14 @@
     var mainAudio = document.getElementById('main-audio');
 
     player.ready(function() {
-   this.prerollManager();
-
-            this.on('play', function() {
-                if (!this.hasClass('vjs-preroll')) {
-                    mainAudio.currentTime = this.currentTime();
-                    mainAudio.play();
-                    if (this.muted()) {
-                        this.muted(false);  // Unmute when main content starts
-                    }
-                } else {
-                    mainAudio.pause();
-                }
-            });
+        this.on('play', function() {
+            if (!this.hasClass('vjs-preroll')) {
+                mainAudio.currentTime = this.currentTime();
+                mainAudio.play();
+            } else {
+                mainAudio.pause();
+            }
+        });
 
         this.on('pause', function() {
             mainAudio.pause();
@@ -299,7 +294,6 @@
     subtitlesElement.addEventListener('mouseleave', showProgressBar);
     audioButton.addEventListener('mouseenter', hideProgressBar);
     audioButton.addEventListener('mouseleave', showProgressBar);
-</script>
     </script>
 </body>
 </html>
