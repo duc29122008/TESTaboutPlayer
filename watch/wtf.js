@@ -11,7 +11,7 @@
         // Add more preroll URLs as needed
     ];
 
-        var PrerollManager = function(player) {
+      var PrerollManager = function(player) {
         this.player = player;
         this.prerolls = [];
         this.currentPreroll = 0;
