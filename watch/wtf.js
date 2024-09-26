@@ -11,18 +11,17 @@
         // Add more preroll URLs as needed
     ];
 
-       var PrerollManager = function(player) {
+        var PrerollManager = function(player) {
         this.player = player;
         this.prerolls = [];
         this.currentPreroll = 0;
         this.prerollCounter = document.createElement('div');
         this.prerollCounter.className = 'preroll-counter';
         this.player.el().appendChild(this.prerollCounter);
-        this.totalPrerollDuration = 0;
     };
 
     PrerollManager.prototype.initPrerolls = function() {
-        var numPrerolls = Math.floor(Math.random() * 3) + 1;
+        var numPrerolls = Math.floor(Math.random() * 3) + 1; // Random number between 1 and 3
         this.prerolls = [];
         for (var i = 0; i < numPrerolls; i++) {
             var randomIndex = Math.floor(Math.random() * prerollPool.length);
@@ -37,7 +36,7 @@
     };
 
     PrerollManager.prototype.updatePrerollCounter = function() {
-        var remainingTime = this.totalPrerollDuration - this.player.currentTime();
+        var remainingTime = this.player.duration() - this.player.currentTime();
         this.prerollCounter.textContent = `Preroll • ${this.currentPreroll + 1} of ${this.prerolls.length} • ${this.formatTime(remainingTime)}`;
     };
 
@@ -47,8 +46,7 @@
             this.player.addClass('vjs-preroll');
             this.prerollCounter.style.display = 'block';
             this.player.one('loadedmetadata', () => {
-                this.player.muted(false);
-                this.totalPrerollDuration -= this.player.duration();
+                this.player.muted(false);  // Unmute the video
                 this.updatePrerollCounter();
                 this.player.play();
             });
@@ -69,17 +67,15 @@
         this.player.pause();
         this.initPrerolls();
         this.currentPreroll = 0;
-        this.totalPrerollDuration = this.prerolls.length * 30; // Assuming each preroll is 30 seconds
         this.playNextPreroll();
     };
 
+    // Register the plugin
     videojs.registerPlugin('prerollManager', function() {
         var prerollManager = new PrerollManager(this);
         
-        this.on('loadedmetadata', function() {
-            if (!this.hasClass('vjs-preroll')) {
-                prerollManager.start();
-            }
+        this.one('loadedmetadata', function() {
+            prerollManager.start();
         });
 
         this.on('timeupdate', function() {
