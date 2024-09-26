@@ -18,6 +18,8 @@
         this.prerollCounter = document.createElement('div');
         this.prerollCounter.className = 'preroll-counter';
         this.player.el().appendChild(this.prerollCounter);
+        this.totalPrerollDuration = 0;
+        this.remainingTime = 0;
     };
 
     PrerollManager.prototype.initPrerolls = function() {
@@ -36,21 +38,25 @@
     };
 
     PrerollManager.prototype.updatePrerollCounter = function() {
-        var totalDuration = this.prerolls.slice(this.currentPreroll).reduce((acc, src) => acc + this.player.duration(), 0);
-        this.prerollCounter.textContent = `Quảng cáo • ${this.currentPreroll + 1} of ${this.prerolls.length} • ${this.formatTime(totalDuration)}`;
+        this.remainingTime = Math.max(0, this.totalPrerollDuration - this.player.currentTime());
+        this.prerollCounter.textContent = `Preroll • ${this.currentPreroll + 1} of ${this.prerolls.length} • ${this.formatTime(this.remainingTime)}`;
     };
 
     PrerollManager.prototype.playNextPreroll = function() {
         if (this.currentPreroll < this.prerolls.length) {
-            this.player.src(this.prerolls[this.currentPreroll]);
+            this.player.src({ type: 'video/mp4', src: this.prerolls[this.currentPreroll] });
             this.player.addClass('vjs-preroll');
             this.prerollCounter.style.display = 'block';
             this.player.one('loadedmetadata', () => {
+                this.totalPrerollDuration += this.player.duration();
+                this.remainingTime = this.totalPrerollDuration;
                 this.updatePrerollCounter();
                 this.player.play();
             });
-            this.player.one('ended', () => this.playNextPreroll());
-            this.currentPreroll++;
+            this.player.one('ended', () => {
+                this.currentPreroll++;
+                this.playNextPreroll();
+            });
         } else {
             this.player.removeClass('vjs-preroll');
             this.prerollCounter.style.display = 'none';
@@ -60,8 +66,11 @@
     };
 
     PrerollManager.prototype.start = function() {
-        this.mainContentSrc = this.player.src();
+        this.mainContentSrc = this.player.currentSrc();
+        this.player.pause();
         this.initPrerolls();
+        this.currentPreroll = 0;
+        this.totalPrerollDuration = 0;
         this.playNextPreroll();
     };
 
@@ -70,7 +79,7 @@
         var prerollManager = new PrerollManager(this);
         
         this.on('loadedmetadata', function() {
-            if (prerollManager.currentPreroll === 0) {
+            if (!this.hasClass('vjs-preroll')) {
                 prerollManager.start();
             }
         });
