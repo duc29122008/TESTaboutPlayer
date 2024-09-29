@@ -18,6 +18,7 @@
         this.mainContentSrc = null;
         this.mainContentTextTracks = null;
         this.mainAudioElements = null;
+        this.originalVolume = null;
     };
 
     PrerollManager.prototype.initPrerolls = function() {
@@ -45,12 +46,15 @@
         this.mainContentSrc = this.player.currentSrc();
         this.mainContentTextTracks = Array.from(this.player.textTracks());
         
-        // Store and pause main audio elements
+        // Store and mute main audio elements
         this.mainAudioElements = Array.from(document.querySelectorAll('audio'));
         this.mainAudioElements.forEach(audio => {
-            audio.pause();
-            audio.currentTime = 0;
+            audio.muted = true;
         });
+        
+        // Store original volume and mute the player
+        this.originalVolume = this.player.volume();
+        this.player.muted(true);
         
         // Remove the source from the video element
         this.player.src('');
@@ -82,18 +86,21 @@
         // Hide the preroll counter
         this.prerollCounter.style.display = 'none';
 
-        // Re-enable main audio elements
+        // Unmute main audio elements and restore original volume
         if (this.mainAudioElements) {
             this.mainAudioElements.forEach(audio => {
-                audio.currentTime = 0;
+                audio.muted = false;
             });
         }
+        this.player.muted(false);
+        this.player.volume(this.originalVolume);
     };
 
     PrerollManager.prototype.playNextPreroll = function() {
         if (this.currentPreroll < this.prerolls.length) {
             this.player.src({ type: 'video/mp4', src: this.prerolls[this.currentPreroll] });
             this.player.one('loadedmetadata', () => {
+                this.player.muted(false);  // Ensure preroll audio is not muted
                 this.updatePrerollCounter();
                 this.player.play();
             });
