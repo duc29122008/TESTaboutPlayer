@@ -16,9 +16,7 @@
         this.prerollCounter.className = 'preroll-counter';
         this.player.el().appendChild(this.prerollCounter);
         this.mainContentSrc = null;
-        this.mainContentTextTracks = null;
-        this.mainAudioElements = null;
-        this.originalVolume = null;
+        this.mainContentTracks = null;
     };
 
     PrerollManager.prototype.initPrerolls = function() {
@@ -41,43 +39,32 @@
         this.prerollCounter.textContent = `Quảng cáo • ${this.currentPreroll + 1}/${this.prerolls.length} • ${this.formatTime(remainingTime)}`;
     };
 
-    PrerollManager.prototype.disableMainContent = function() {
-        // Store main content source and text tracks
-        this.mainContentSrc = this.player.currentSrc();
-        this.mainContentTextTracks = Array.from(this.player.textTracks());
+    PrerollManager.prototype.storeMainContent = function() {
+        var videoElement = this.player.el().querySelector('video');
+        this.mainContentSrc = videoElement.src;
+        this.mainContentTracks = Array.from(videoElement.getElementsByTagName('track')).map(track => ({
+            kind: track.kind,
+            label: track.label,
+            srclang: track.srclang,
+            src: track.src
+        }));
         
-        // Store and mute main audio elements
-        this.mainAudioElements = Array.from(document.querySelectorAll('audio'));
-        this.mainAudioElements.forEach(audio => {
-            audio.muted = true;
-        });
-        
-        // Store original volume and mute the player
-        this.originalVolume = this.player.volume();
-        this.player.muted(true);
-        
-        // Remove the source from the video element
-        this.player.src('');
-        
-        // Disable all text tracks
-        this.player.textTracks().tracks_.forEach(track => {
-            track.mode = 'disabled';
-        });
-        
-        // Add a class to the player for CSS targeting
-        this.player.addClass('vjs-preroll');
-        
-        // Show the preroll counter
-        this.prerollCounter.style.display = 'block';
+        // Remove src and tracks from video element
+        videoElement.src = '';
+        videoElement.innerHTML = '';
     };
 
-    PrerollManager.prototype.enableMainContent = function() {
-        // Restore main content source
-        this.player.src(this.mainContentSrc);
+    PrerollManager.prototype.restoreMainContent = function() {
+        var videoElement = this.player.el().querySelector('video');
+        videoElement.src = this.mainContentSrc;
         
-        // Restore text tracks
-        this.mainContentTextTracks.forEach(track => {
-            this.player.textTracks().addTrack(track);
+        this.mainContentTracks.forEach(track => {
+            var trackElement = document.createElement('track');
+            trackElement.kind = track.kind;
+            trackElement.label = track.label;
+            trackElement.srclang = track.srclang;
+            trackElement.src = track.src;
+            videoElement.appendChild(trackElement);
         });
         
         // Remove the preroll class
@@ -85,15 +72,6 @@
         
         // Hide the preroll counter
         this.prerollCounter.style.display = 'none';
-
-        // Unmute main audio elements and restore original volume
-        if (this.mainAudioElements) {
-            this.mainAudioElements.forEach(audio => {
-                audio.muted = false;
-            });
-        }
-        this.player.muted(false);
-        this.player.volume(this.originalVolume);
     };
 
     PrerollManager.prototype.playNextPreroll = function() {
@@ -109,7 +87,7 @@
                 this.playNextPreroll();
             });
         } else {
-            this.enableMainContent();
+            this.restoreMainContent();
             this.player.one('loadedmetadata', () => {
                 this.player.play();
             });
@@ -117,9 +95,11 @@
     };
 
     PrerollManager.prototype.start = function() {
-        this.disableMainContent();
+        this.storeMainContent();
         this.initPrerolls();
         this.currentPreroll = 0;
+        this.player.addClass('vjs-preroll');
+        this.prerollCounter.style.display = 'block';
         this.playNextPreroll();
     };
 
