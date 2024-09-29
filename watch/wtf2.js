@@ -6,7 +6,6 @@
         'https://www.dl.dropboxusercontent.com/scl/fi/k6zwiytq6nhc4v43wlk87/ads3.mp4?rlkey=tyds1mc9v06attkiwv2t5dapp&raw=1',
         'https://www.dl.dropboxusercontent.com/scl/fi/sfixiszh59j7hp7gw3sta/ads4.mp4?rlkey=g8xq168pa3pfpmxqlvmqo22tm&raw=1',
         'https://www.dl.dropboxusercontent.com/scl/fi/rne20mz9xpjnmd6a103zf/ads5.mp4?rlkey=l4lpjce6bpg7vtrnrc9qwn8fd&raw=1'
-        // Add more preroll URLs as needed
     ];
 
     var PrerollManager = function(player) {
@@ -18,10 +17,11 @@
         this.player.el().appendChild(this.prerollCounter);
         this.mainContentSrc = null;
         this.mainContentTextTracks = null;
+        this.mainAudioElements = null;
     };
 
     PrerollManager.prototype.initPrerolls = function() {
-        var numPrerolls = Math.floor(Math.random() * 3) + 1; // Random number between 1 and 3
+        var numPrerolls = Math.floor(Math.random() * 3) + 1;
         this.prerolls = [];
         for (var i = 0; i < numPrerolls; i++) {
             var randomIndex = Math.floor(Math.random() * prerollPool.length);
@@ -45,14 +45,19 @@
         this.mainContentSrc = this.player.currentSrc();
         this.mainContentTextTracks = Array.from(this.player.textTracks());
         
+        // Store and pause main audio elements
+        this.mainAudioElements = Array.from(document.querySelectorAll('audio'));
+        this.mainAudioElements.forEach(audio => {
+            audio.pause();
+            audio.currentTime = 0;
+        });
+        
+        // Remove the source from the video element
+        this.player.src('');
+        
         // Disable all text tracks
         this.player.textTracks().tracks_.forEach(track => {
             track.mode = 'disabled';
-        });
-        
-        // Disable all audio tracks
-        this.player.audioTracks().tracks_.forEach(track => {
-            track.enabled = false;
         });
         
         // Add a class to the player for CSS targeting
@@ -71,24 +76,24 @@
             this.player.textTracks().addTrack(track);
         });
         
-        // Enable the first audio track (or whichever was previously enabled)
-        if (this.player.audioTracks().length > 0) {
-            this.player.audioTracks()[0].enabled = true;
-        }
-        
         // Remove the preroll class
         this.player.removeClass('vjs-preroll');
         
         // Hide the preroll counter
         this.prerollCounter.style.display = 'none';
+
+        // Re-enable main audio elements
+        if (this.mainAudioElements) {
+            this.mainAudioElements.forEach(audio => {
+                audio.currentTime = 0;
+            });
+        }
     };
 
     PrerollManager.prototype.playNextPreroll = function() {
         if (this.currentPreroll < this.prerolls.length) {
             this.player.src({ type: 'video/mp4', src: this.prerolls[this.currentPreroll] });
-            this.disableMainContent();
             this.player.one('loadedmetadata', () => {
-                this.player.muted(false);  // Unmute the video
                 this.updatePrerollCounter();
                 this.player.play();
             });
@@ -98,12 +103,14 @@
             });
         } else {
             this.enableMainContent();
-            this.player.play();
+            this.player.one('loadedmetadata', () => {
+                this.player.play();
+            });
         }
     };
 
     PrerollManager.prototype.start = function() {
-        this.player.pause();
+        this.disableMainContent();
         this.initPrerolls();
         this.currentPreroll = 0;
         this.playNextPreroll();
