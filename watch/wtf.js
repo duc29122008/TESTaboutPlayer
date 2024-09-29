@@ -1,5 +1,3 @@
-// prerolls.js
-
 (function(videojs) {
     // Configuration
     var prerollPool = [
@@ -8,10 +6,9 @@
         'https://www.dl.dropboxusercontent.com/scl/fi/k6zwiytq6nhc4v43wlk87/ads3.mp4?rlkey=tyds1mc9v06attkiwv2t5dapp&raw=1',
         'https://www.dl.dropboxusercontent.com/scl/fi/sfixiszh59j7hp7gw3sta/ads4.mp4?rlkey=g8xq168pa3pfpmxqlvmqo22tm&raw=1',
         'https://www.dl.dropboxusercontent.com/scl/fi/rne20mz9xpjnmd6a103zf/ads5.mp4?rlkey=l4lpjce6bpg7vtrnrc9qwn8fd&raw=1'
-        // Add more preroll URLs as needed
     ];
 
-  var PrerollManager = function(player) {
+    var PrerollManager = function(player) {
         this.player = player;
         this.prerolls = [];
         this.currentPreroll = 0;
@@ -19,6 +16,7 @@
         this.prerollCounter.className = 'preroll-counter';
         this.player.el().appendChild(this.prerollCounter);
         this.mainAudio = document.getElementById('main-audio');
+        this.isPreroll = false;
     };
 
     PrerollManager.prototype.initPrerolls = function() {
@@ -41,65 +39,33 @@
         this.prerollCounter.textContent = `Quảng cáo • ${this.currentPreroll + 1}/${this.prerolls.length} • ${this.formatTime(remainingTime)}`;
     };
 
-    PrerollManager.prototype.playNextPreroll = function() {
-        if (this.currentPreroll < this.prerolls.length) {
-            this.player.src({ type: 'video/mp4', src: this.prerolls[this.currentPreroll] });
-            this.player.addClass('vjs-preroll');
-            this.prerollCounter.style.display = 'block';
-            this.player.one('loadedmetadata', () => {
-                this.player.muted(false);  // Unmute the video
-                this.updatePrerollCounter();
-                this.player.play();
-            });
-            this.player.one('ended', () => {
-                this.currentPreroll++;
-                this.playNextPreroll();
-            });
-        } else {
-            this.player.removeClass('vjs-preroll');
-            this.prerollCounter.style.display = 'none';
-            this.player.src(this.mainContentSrc);
-            this.player.play();
-        }
-    };
-
-    PrerollManager.prototype.start = function() {
-        this.mainContentSrc = this.player.currentSrc();
-        this.player.pause();
-        this.initPrerolls();
-        this.currentPreroll = 0;
-        this.playNextPreroll();
-    };
-
-    // Register the plugin
-    videojs.registerPlugin('prerollManager', function() {
-        var prerollManager = new PrerollManager(this);
-        
-        this.one('loadedmetadata', function() {
-            prerollManager.start();
-        });
-
-        this.on('timeupdate', function() {
-            if (this.hasClass('vjs-preroll')) {
-                prerollManager.updatePrerollCounter();
-            }
-        });
-    });
-
-      PrerollManager.prototype.disableMainVideoFeatures = function() {
-        this.player.controlBar.hide();
+    PrerollManager.prototype.disableMainVideoFeatures = function() {
         this.player.textTrackDisplay.hide();
         this.mainAudio.pause();
         this.mainAudio.currentTime = 0;
+        this.player.controlBar.progressControl.disable();
+        this.player.controlBar.currentTimeDisplay.hide();
+        this.player.controlBar.timeDivider.hide();
+        this.player.controlBar.durationDisplay.hide();
+        this.player.controlBar.remainingTimeDisplay.hide();
+        this.player.controlBar.customControlSpacer.hide();
+        this.player.controlBar.playToggle.show();
+        this.player.controlBar.volumePanel.show();
     };
 
     PrerollManager.prototype.enableMainVideoFeatures = function() {
-        this.player.controlBar.show();
         this.player.textTrackDisplay.show();
+        this.player.controlBar.progressControl.enable();
+        this.player.controlBar.currentTimeDisplay.show();
+        this.player.controlBar.timeDivider.show();
+        this.player.controlBar.durationDisplay.show();
+        this.player.controlBar.remainingTimeDisplay.show();
+        this.player.controlBar.customControlSpacer.show();
     };
 
     PrerollManager.prototype.playNextPreroll = function() {
         if (this.currentPreroll < this.prerolls.length) {
+            this.isPreroll = true;
             this.player.src({ type: 'video/mp4', src: this.prerolls[this.currentPreroll] });
             this.player.addClass('vjs-preroll');
             this.prerollCounter.style.display = 'block';
@@ -114,6 +80,7 @@
                 this.playNextPreroll();
             });
         } else {
+            this.isPreroll = false;
             this.player.removeClass('vjs-preroll');
             this.prerollCounter.style.display = 'none';
             this.enableMainVideoFeatures();
@@ -132,41 +99,76 @@
 
     // Register the plugin
     videojs.registerPlugin('prerollManager', function() {
-        var prerollManager = new PrerollManager(this);
+        var player = this;
+        var prerollManager = new PrerollManager(player);
         
-        this.one('loadedmetadata', function() {
+        player.one('loadedmetadata', function() {
             prerollManager.start();
         });
 
-        this.on('timeupdate', function() {
-            if (this.hasClass('vjs-preroll')) {
+        player.on('timeupdate', function() {
+            if (prerollManager.isPreroll) {
                 prerollManager.updatePrerollCounter();
             }
         });
 
         // Disable seeking during prerolls
-        this.on('seeking', function() {
-            if (this.hasClass('vjs-preroll')) {
-                this.currentTime(this.currentTime() - 0.1);
+        player.on('seeking', function() {
+            if (prerollManager.isPreroll) {
+                player.currentTime(player.currentTime() - 0.1);
             }
         });
 
-        // Disable volume controls during prerolls
-        var originalVolume = this.volume;
-        var originalMuted = this.muted;
-
-        this.volume = function(percentAsDecimal) {
-            if (!this.hasClass('vjs-preroll')) {
-                return originalVolume.apply(this, arguments);
+        // Handle play/pause for both prerolls and main content
+        player.on('play', function() {
+            if (!prerollManager.isPreroll) {
+                prerollManager.mainAudio.play();
             }
-            return this.volume();
+        });
+
+        player.on('pause', function() {
+            if (!prerollManager.isPreroll) {
+                prerollManager.mainAudio.pause();
+            }
+        });
+
+        // Handle volume changes for both prerolls and main content
+        player.on('volumechange', function() {
+            if (!prerollManager.isPreroll) {
+                prerollManager.mainAudio.volume = player.volume();
+                prerollManager.mainAudio.muted = player.muted();
+            }
+        });
+
+        // Handle seeking for main content
+        player.on('seeked', function() {
+            if (!prerollManager.isPreroll) {
+                prerollManager.mainAudio.currentTime = player.currentTime();
+            }
+        });
+
+        // Override the player's volume methods to control audio directly
+        var originalVolume = player.volume;
+        var originalMuted = player.muted;
+
+        player.volume = function(percentAsDecimal) {
+            if (percentAsDecimal !== undefined) {
+                if (!prerollManager.isPreroll) {
+                    prerollManager.mainAudio.volume = percentAsDecimal;
+                }
+                return originalVolume.call(this, percentAsDecimal);
+            }
+            return prerollManager.isPreroll ? this.volume() : prerollManager.mainAudio.volume;
         };
 
-        this.muted = function(muted) {
-            if (!this.hasClass('vjs-preroll')) {
-                return originalMuted.apply(this, arguments);
+        player.muted = function(muted) {
+            if (muted !== undefined) {
+                if (!prerollManager.isPreroll) {
+                    prerollManager.mainAudio.muted = muted;
+                }
+                return originalMuted.call(this, muted);
             }
-            return this.muted();
+            return prerollManager.isPreroll ? this.muted() : prerollManager.mainAudio.muted;
         };
     });
 })(window.videojs);
