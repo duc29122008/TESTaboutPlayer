@@ -170,4 +170,3 @@
         };
     });
 })(window.videojs);
-})(window.videojs);
