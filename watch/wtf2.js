@@ -39,46 +39,39 @@
         this.prerollCounter.textContent = `Quảng cáo • ${this.currentPreroll + 1}/${this.prerolls.length} • ${this.formatTime(remainingTime)}`;
     };
 
-    PrerollManager.prototype.storeMainContent = function() {
-        var videoElement = this.player.el().querySelector('video');
-        this.mainContentSrc = videoElement.src;
-        this.mainContentTracks = Array.from(videoElement.getElementsByTagName('track')).map(track => ({
-            kind: track.kind,
-            label: track.label,
-            srclang: track.srclang,
-            src: track.src
-        }));
+    PrerollManager.prototype.setupForPreroll = function() {
+        // Add a class to the player for CSS targeting
+        this.player.addClass('vjs-preroll');
         
-        // Remove src and tracks from video element
-        videoElement.src = '';
-        videoElement.innerHTML = '';
+        // Show the preroll counter
+        this.prerollCounter.style.display = 'block';
+
+        // Ensure audio is enabled for prerolls
+        this.player.muted(false);
     };
 
-    PrerollManager.prototype.restoreMainContent = function() {
-        var videoElement = this.player.el().querySelector('video');
-        videoElement.src = this.mainContentSrc;
-        
-        this.mainContentTracks.forEach(track => {
-            var trackElement = document.createElement('track');
-            trackElement.kind = track.kind;
-            trackElement.label = track.label;
-            trackElement.srclang = track.srclang;
-            trackElement.src = track.src;
-            videoElement.appendChild(trackElement);
-        });
-        
+    PrerollManager.prototype.setupForMainContent = function() {
         // Remove the preroll class
         this.player.removeClass('vjs-preroll');
         
         // Hide the preroll counter
         this.prerollCounter.style.display = 'none';
+
+        // Set the source to the main content
+        this.player.src({ type: 'video/mp4', src: this.mainContentSrc });
+
+        // Add text tracks
+        if (this.mainContentTracks) {
+            this.mainContentTracks.forEach(track => {
+                this.player.textTracks().addTrack(track);
+            });
+        }
     };
 
     PrerollManager.prototype.playNextPreroll = function() {
         if (this.currentPreroll < this.prerolls.length) {
             this.player.src({ type: 'video/mp4', src: this.prerolls[this.currentPreroll] });
             this.player.one('loadedmetadata', () => {
-                this.player.muted(false);  // Ensure preroll audio is not muted
                 this.updatePrerollCounter();
                 this.player.play();
             });
@@ -87,32 +80,44 @@
                 this.playNextPreroll();
             });
         } else {
-            this.restoreMainContent();
+            this.setupForMainContent();
             this.player.one('loadedmetadata', () => {
                 this.player.play();
             });
         }
     };
 
-    PrerollManager.prototype.start = function() {
-        this.storeMainContent();
+    PrerollManager.prototype.start = function(mainContentSrc, mainContentTracks) {
+        this.mainContentSrc = mainContentSrc;
+        this.mainContentTracks = mainContentTracks;
         this.initPrerolls();
+        this.setupForPreroll();
         this.currentPreroll = 0;
-        this.player.addClass('vjs-preroll');
-        this.prerollCounter.style.display = 'block';
         this.playNextPreroll();
     };
 
     // Register the plugin
     videojs.registerPlugin('prerollManager', function() {
-        var prerollManager = new PrerollManager(this);
+        var player = this;
+        var prerollManager = new PrerollManager(player);
         
-        this.one('loadedmetadata', function() {
-            prerollManager.start();
+        // Store the original source and tracks
+        var mainContentSrc = player.currentSrc();
+        var mainContentTracks = player.textTracks().tracks_.slice();
+
+        // Remove the source and tracks from the player
+        player.src('');
+        player.textTracks().tracks_.forEach(track => {
+            player.textTracks().removeTrack(track);
         });
 
-        this.on('timeupdate', function() {
-            if (this.hasClass('vjs-preroll')) {
+        // Start preroll manager when player is ready
+        player.ready(function() {
+            prerollManager.start(mainContentSrc, mainContentTracks);
+        });
+
+        player.on('timeupdate', function() {
+            if (player.hasClass('vjs-preroll')) {
                 prerollManager.updatePrerollCounter();
             }
         });
